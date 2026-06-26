@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class LookAroundManager : MonoBehaviour
 {
@@ -8,14 +9,14 @@ public class LookAroundManager : MonoBehaviour
 
     [Header("Look Around Settings")]
     public bool startOnPlay = true;
-    public float directionTolerance = 25f;
+    public float directionTolerance = 12f;
     public float startDelayAfterComplete = 1.0f;
 
-    [Header("Sequential Guidance")]
-    public bool requireSequentialOrder = true;
+    [Header("Startup Delay")]
+    public float activationDelay = 0.75f;
 
     [Header("Debug UI")]
-    public bool showDebugOverlay = true;
+    public bool showDebugOverlay = false;
 
     public bool HasLookedForward { get; private set; }
     public bool HasLookedLeft { get; private set; }
@@ -26,15 +27,23 @@ public class LookAroundManager : MonoBehaviour
     public bool IsComplete { get; private set; }
 
     public LookAroundDirection CurrentRequiredDirection { get; private set; }
+    public event Action<LookAroundDirection> OnDirectionCompleted;
 
     public Vector3 InitialForward
     {
         get { return initialForward; }
     }
 
+    public int CompletedTargetCount
+    {
+        get { return completedTargetCount; }
+    }
+
     private Vector3 initialForward;
+    private float phaseStartTime;
     private float completeTime = -1f;
     private bool hasStartedSearchGame = false;
+    private int completedTargetCount = 0;
 
     private void Awake()
     {
@@ -59,13 +68,20 @@ public class LookAroundManager : MonoBehaviour
 
     private void Update()
     {
-        if (!IsActive || IsComplete)
+        if (IsComplete && !hasStartedSearchGame)
         {
-            if (IsComplete && !hasStartedSearchGame)
-            {
-                TryStartSearchGameAfterDelay();
-            }
+            TryStartSearchGameAfterDelay();
+            return;
+        }
 
+        if (!IsActive)
+        {
+            return;
+        }
+
+        // Wichtig: verhindert, dass der erste Kreis direkt im ersten Frame abgeschlossen wird.
+        if (Time.time < phaseStartTime + activationDelay)
+        {
             return;
         }
 
@@ -95,12 +111,15 @@ public class LookAroundManager : MonoBehaviour
         HasLookedRight = false;
         HasLookedBack = false;
 
+        completedTargetCount = 0;
+
         CurrentRequiredDirection = LookAroundDirection.Front;
 
         IsActive = true;
         IsComplete = false;
         hasStartedSearchGame = false;
         completeTime = -1f;
+        phaseStartTime = Time.time;
 
         Debug.Log("Umschau-Phase gestartet: Folge den leuchtenden Kreisen.");
     }
@@ -122,76 +141,82 @@ public class LookAroundManager : MonoBehaviour
             Vector3.up
         );
 
-        if (requireSequentialOrder)
+        // Reihenfolge egal: Nutzer kann vorne, links, rechts oder hinten starten.
+        if (!HasLookedForward && IsAngleForDirection(angleFromStart, LookAroundDirection.Front))
         {
-            UpdateSequentialProgress(angleFromStart);
-        }
-        else
-        {
-            UpdateFreeProgress(angleFromStart);
-        }
-    }
-
-    private void UpdateSequentialProgress(float angleFromStart)
-    {
-        if (CurrentRequiredDirection == LookAroundDirection.Front &&
-            IsAngleForDirection(angleFromStart, LookAroundDirection.Front))
-        {
-            HasLookedForward = true;
-            CurrentRequiredDirection = LookAroundDirection.Left;
-            Debug.Log("Vorne abgeschlossen. Jetzt nach links schauen.");
-            return;
+            CompleteDirection(LookAroundDirection.Front);
         }
 
-        if (CurrentRequiredDirection == LookAroundDirection.Left &&
-            IsAngleForDirection(angleFromStart, LookAroundDirection.Left))
+        if (!HasLookedLeft && IsAngleForDirection(angleFromStart, LookAroundDirection.Left))
         {
-            HasLookedLeft = true;
-            CurrentRequiredDirection = LookAroundDirection.Right;
-            Debug.Log("Links abgeschlossen. Jetzt nach rechts schauen.");
-            return;
+            CompleteDirection(LookAroundDirection.Left);
         }
 
-        if (CurrentRequiredDirection == LookAroundDirection.Right &&
-            IsAngleForDirection(angleFromStart, LookAroundDirection.Right))
+        if (!HasLookedRight && IsAngleForDirection(angleFromStart, LookAroundDirection.Right))
         {
-            HasLookedRight = true;
-            CurrentRequiredDirection = LookAroundDirection.Back;
-            Debug.Log("Rechts abgeschlossen. Jetzt nach hinten schauen.");
-            return;
+            CompleteDirection(LookAroundDirection.Right);
         }
 
-        if (CurrentRequiredDirection == LookAroundDirection.Back &&
-            IsAngleForDirection(angleFromStart, LookAroundDirection.Back))
+        if (!HasLookedBack && IsAngleForDirection(angleFromStart, LookAroundDirection.Back))
         {
-            HasLookedBack = true;
-            Debug.Log("Hinten abgeschlossen.");
-        }
-    }
-
-    private void UpdateFreeProgress(float angleFromStart)
-    {
-        if (IsAngleForDirection(angleFromStart, LookAroundDirection.Front))
-        {
-            HasLookedForward = true;
-        }
-
-        if (IsAngleForDirection(angleFromStart, LookAroundDirection.Left))
-        {
-            HasLookedLeft = true;
-        }
-
-        if (IsAngleForDirection(angleFromStart, LookAroundDirection.Right))
-        {
-            HasLookedRight = true;
-        }
-
-        if (IsAngleForDirection(angleFromStart, LookAroundDirection.Back))
-        {
-            HasLookedBack = true;
+            CompleteDirection(LookAroundDirection.Back);
         }
 
         UpdateNextRequiredDirection();
+    }
+
+    private void CompleteDirection(LookAroundDirection direction)
+    {
+        switch (direction)
+        {
+            case LookAroundDirection.Front:
+                HasLookedForward = true;
+                break;
+
+            case LookAroundDirection.Left:
+                HasLookedLeft = true;
+                break;
+
+            case LookAroundDirection.Right:
+                HasLookedRight = true;
+                break;
+
+            case LookAroundDirection.Back:
+                HasLookedBack = true;
+                break;
+        }
+
+        completedTargetCount++;
+        OnDirectionCompleted?.Invoke(direction);
+
+        Debug.Log("Richtung abgeschlossen: " + direction + " (" + completedTargetCount + "/4)");
+    }
+
+    private void UpdateNextRequiredDirection()
+    {
+        if (!HasLookedForward)
+        {
+            CurrentRequiredDirection = LookAroundDirection.Front;
+            return;
+        }
+
+        if (!HasLookedLeft)
+        {
+            CurrentRequiredDirection = LookAroundDirection.Left;
+            return;
+        }
+
+        if (!HasLookedBack)
+        {
+            CurrentRequiredDirection = LookAroundDirection.Back;
+            return;
+        }
+
+        if (!HasLookedRight)
+        {
+            CurrentRequiredDirection = LookAroundDirection.Right;
+            return;
+        }
     }
 
     private bool IsAngleForDirection(float angle, LookAroundDirection direction)
@@ -217,45 +242,15 @@ public class LookAroundManager : MonoBehaviour
         }
     }
 
-    private void UpdateNextRequiredDirection()
-    {
-        if (!HasLookedForward)
-        {
-            CurrentRequiredDirection = LookAroundDirection.Front;
-            return;
-        }
-
-        if (!HasLookedLeft)
-        {
-            CurrentRequiredDirection = LookAroundDirection.Left;
-            return;
-        }
-
-        if (!HasLookedRight)
-        {
-            CurrentRequiredDirection = LookAroundDirection.Right;
-            return;
-        }
-
-        if (!HasLookedBack)
-        {
-            CurrentRequiredDirection = LookAroundDirection.Back;
-            return;
-        }
-    }
-
     private void CheckCompletion()
     {
-        if (HasLookedForward &&
-            HasLookedLeft &&
-            HasLookedRight &&
-            HasLookedBack)
+        if (completedTargetCount >= 4)
         {
             IsComplete = true;
             IsActive = false;
             completeTime = Time.time;
 
-            Debug.Log("Umschau-Phase abgeschlossen. Suchspiel startet gleich.");
+            Debug.Log("Umschau-Phase abgeschlossen. Alle 4 Targets wurden angesehen.");
         }
     }
 
@@ -302,27 +297,6 @@ public class LookAroundManager : MonoBehaviour
         }
     }
 
-    private string GetNextMissingDirectionText()
-    {
-        switch (CurrentRequiredDirection)
-        {
-            case LookAroundDirection.Front:
-                return "Schau zum leuchtenden Kreis vor dir.";
-
-            case LookAroundDirection.Left:
-                return "Folge dem Leuchten nach links.";
-
-            case LookAroundDirection.Right:
-                return "Folge dem Leuchten nach rechts.";
-
-            case LookAroundDirection.Back:
-                return "Dreh dich langsam zum Kreis hinter dir.";
-
-            default:
-                return "Schau dich langsam um.";
-        }
-    }
-
     private void OnGUI()
     {
         if (!showDebugOverlay)
@@ -335,15 +309,17 @@ public class LookAroundManager : MonoBehaviour
             return;
         }
 
-        GUILayout.BeginArea(new Rect(10, 310, 480, 230), GUI.skin.box);
+        GUILayout.BeginArea(new Rect(10, 310, 480, 250), GUI.skin.box);
 
         GUILayout.Label("Raum-Orientierung");
         GUILayout.Space(8);
 
+        GUILayout.Label("Angesehene Targets: " + completedTargetCount + " / 4");
+
         if (IsActive)
         {
-            GUILayout.Label("KI: Schau dich einmal langsam im Raum um.");
-            GUILayout.Label("Hinweis: " + GetNextMissingDirectionText());
+            GUILayout.Label("KI: Schau dich langsam im Raum um.");
+            GUILayout.Label("Folge den leuchtenden Kreisen.");
         }
         else if (IsComplete && !hasStartedSearchGame)
         {
