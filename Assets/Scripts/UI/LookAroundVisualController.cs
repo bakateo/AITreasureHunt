@@ -71,7 +71,7 @@ public class LookAroundVisualController : MonoBehaviour
 
                 if (toPlayer.sqrMagnitude > 0.001f)
                 {
-                    target.transform.rotation = Quaternion.LookRotation(-toPlayer.normalized, Vector3.up);
+                    target.transform.rotation = Quaternion.LookRotation(toPlayer.normalized, Vector3.up);
                 }
             }
         }
@@ -79,8 +79,6 @@ public class LookAroundVisualController : MonoBehaviour
 
     private void UpdateTargetStates()
     {
-        LookAroundDirection currentTarget = lookAroundManager.CurrentRequiredDirection;
-
         foreach (LookAroundTargetVisual target in targets)
         {
             if (target == null)
@@ -89,9 +87,27 @@ public class LookAroundVisualController : MonoBehaviour
             }
 
             bool completed = lookAroundManager.IsDirectionCompleted(target.direction);
-            bool active = lookAroundManager.IsActive && !completed && target.direction == currentTarget;
+            bool active = lookAroundManager.IsActive &&
+                        !completed &&
+                        target.direction == lookAroundManager.CurrentRequiredDirection;
 
-            target.gameObject.SetActive(lookAroundManager.IsActive || lookAroundManager.IsComplete);
+            if (!lookAroundManager.IsActive && !lookAroundManager.IsComplete)
+            {
+                target.gameObject.SetActive(false);
+                continue;
+            }
+
+            if (completed && target.IsReadyToHide())
+            {
+                target.gameObject.SetActive(false);
+                continue;
+            }
+
+            if (!target.gameObject.activeSelf)
+            {
+                target.gameObject.SetActive(true);
+            }
+
             target.SetState(active, completed);
         }
     }

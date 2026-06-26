@@ -6,7 +6,7 @@ public class SearchDebugOverlay : MonoBehaviour
     public AIHintServiceMock aiHintService;
     public HudHotColdFeedback hudFeedback;
 
-    public bool showOverlay = true;
+    public bool showOverlay = false;
 
     private void Awake()
     {
