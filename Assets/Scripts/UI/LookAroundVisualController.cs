@@ -63,7 +63,10 @@ public class LookAroundVisualController : MonoBehaviour
             }
 
             Vector3 direction = GetWorldDirection(target.direction, forward, right);
-            target.transform.position = center + direction * radius;
+            Vector3 targetPosition = center + direction * radius;
+
+            targetPosition.y = center.y;
+            target.transform.position = targetPosition;
 
             if (facePlayer)
             {
