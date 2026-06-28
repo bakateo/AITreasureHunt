@@ -11,6 +11,7 @@
     "com.unity.ugui": "1.0.0",
     "com.unity.visualscripting": "1.9.4",
     "com.unity.xr.openxr": "1.14.3",
+    "org.mixedrealitytoolkit.audio": "file:C:/Users/Matteo/Downloads/org.mixedrealitytoolkit.audio-3.0.5.tgz",
     "org.mixedrealitytoolkit.core": "file:MRTK3/org.mixedrealitytoolkit.core-3.3.0.tgz",
     "org.mixedrealitytoolkit.input": "file:MRTK3/org.mixedrealitytoolkit.input-3.3.0.tgz",
     "org.mixedrealitytoolkit.spatialmanipulation": "file:MRTK3/org.mixedrealitytoolkit.spatialmanipulation-3.4.0.tgz",
