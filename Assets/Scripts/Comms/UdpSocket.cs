@@ -19,14 +19,24 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Linq.Expressions;
 
 public class UdpSocket : MonoBehaviour
 {
     [HideInInspector] public bool isTxStarted = false;
 
-    [SerializeField] string IP = "127.0.0.1"; // local host
+    [SerializeField] string IP = "192.168.178.107"; // local host
     [SerializeField] int rxPort = 8000; // port to receive data from Python on
     [SerializeField] int txPort = 8001; // port to send data to Python on
+
+    [Serializable]
+    public class SpeechMessage
+    {
+        public string type;
+        public string text;
+    }
+
+    public TextToSpeechManager textToSpeech;
 
     // Create necessary UdpClient objects
     UdpClient client;
@@ -60,6 +70,11 @@ public class UdpSocket : MonoBehaviour
         receiveThread.IsBackground = true;
         receiveThread.Start();
 
+        if (textToSpeech == null)
+        {
+            textToSpeech = FindObjectOfType<TextToSpeechManager>();
+        }
+
         // Initialize (seen in comments window)
         print("UDP Comms Initialised");
     }
@@ -73,13 +88,14 @@ public class UdpSocket : MonoBehaviour
             {
                 IPEndPoint anyIP = new IPEndPoint(IPAddress.Any, 0);
                 byte[] data = client.Receive(ref anyIP);
-                string text = Encoding.UTF8.GetString(data);
-                print(">> " + text);
-                ProcessInput(text);
+                string json = Encoding.UTF8.GetString(data);
+                Debug.Log("UDP JSON:" + json);
+
+                ProcessInput(json);
             }
             catch (Exception err)
             {
-                print(err.ToString());
+                Debug.Log(err.ToString());
             }
         }
     }
@@ -92,6 +108,64 @@ public class UdpSocket : MonoBehaviour
         {
             isTxStarted = true;
         }
+
+        try
+        {
+            SpeechMessage message =
+                JsonUtility.FromJson<SpeechMessage>(input);
+
+
+
+            if (message == null)
+            {
+                Debug.LogWarning(
+                    "JSON parsing failed");
+                return;
+            }
+
+
+
+            Debug.Log("Received type: "
+                + message.type
+            );
+
+
+            Debug.Log(
+                "Received text: "
+                + message.text
+            );
+
+            if (message.type == "tts")
+            {
+
+                if (textToSpeech != null)
+                {
+                    textToSpeech.Speak(
+                        message.text
+                    );
+                }
+
+                else
+                {
+                    Debug.LogWarning(
+                        "No TTS Manager found"
+                    );
+                }
+
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(
+             "JSON Error: " + e.Message
+         );
+        }
+
+
+            if (textToSpeech != null)
+        {
+            textToSpeech.Speak(input);
+        }
     }
 
     //Prevent crashes - close clients and threads properly!
@@ -100,7 +174,10 @@ public class UdpSocket : MonoBehaviour
         if (receiveThread != null)
             receiveThread.Abort();
 
-        client.Close();
+        if (client != null)
+        {
+            client.Close();
+        }
     }
 
 }
