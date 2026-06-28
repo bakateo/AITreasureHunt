@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.signal
-from hl2ss_ext.viewer import hl2ss, hl2ss_lnm  # clone hl2ss in ordner hl2ss_ext
+from hl2ss.viewer import hl2ss, hl2ss_lnm  # clone hl2ss in ordner hl2ss_ext
 
 
 class AudioStreamReceiver:
