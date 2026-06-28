@@ -13,7 +13,7 @@ import hl2ss_utilities
 # Settings --------------------------------------------------------------------
 
 # HoloLens address
-host = '192.168.1.7'
+host = '192.168.178.145'
 
 # Voice commands
 strings = ['cat', 'dog', 'red', 'blue']

@@ -7,7 +7,7 @@ import webrtcvad
 
 
 class AudioSpeechDetector:
-    def __init__(self, sample_rate=16000, aggressiveness=3, save_dir="audio_records"):
+    def __init__(self, sample_rate=32000, aggressiveness=3, save_dir="audio_records"):
         self.sample_rate = sample_rate
         self.vad = webrtcvad.Vad(aggressiveness)
         self.save_dir = save_dir
@@ -70,4 +70,4 @@ class AudioSpeechDetector:
             wf.writeframes(b''.join(self.voiced_frames))
         print(f"[VAD] Audio gespeichert: {filename}")
 
-        return timestamp
+        return filename
