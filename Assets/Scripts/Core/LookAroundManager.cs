@@ -6,6 +6,7 @@ public class LookAroundManager : MonoBehaviour
     [Header("References")]
     public PlayerTrackingProvider playerTracking;
     public SearchGameManager searchGameManager;
+    public TextToSpeechManager textToSpeech;
 
     [Header("Look Around Settings")]
     public bool startOnPlay = true;
@@ -56,6 +57,11 @@ public class LookAroundManager : MonoBehaviour
         {
             searchGameManager = GetComponent<SearchGameManager>();
         }
+
+        if (textToSpeech == null)
+        {
+            textToSpeech = FindObjectOfType<TextToSpeechManager>();
+        }
     }
 
     private void Start()
@@ -89,12 +95,18 @@ public class LookAroundManager : MonoBehaviour
         CheckCompletion();
     }
 
+
     public void BeginLookAroundPhase()
     {
         if (playerTracking == null)
         {
             Debug.LogError("LookAroundManager: PlayerTrackingProvider fehlt.");
             return;
+        }
+
+        if (textToSpeech != null)
+        {
+            textToSpeech.Speak("Hey User! Schau dich langsam im Raum um.");
         }
 
         Vector3 forward = Vector3.ProjectOnPlane(playerTracking.Forward, Vector3.up);
