@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class SearchGameManager : MonoBehaviour
 {
@@ -8,6 +9,9 @@ public class SearchGameManager : MonoBehaviour
     public AIHintServiceMock aiHintService;
     public HudHotColdFeedback hudFeedback;
     public DebugKeyboardInputProvider debugInput;
+
+    [SerializeField]
+    private SearchIntroAnimation introAnimation;
 
     [Header("Game Settings")]
     public bool autoStartOnPlay = false;
@@ -55,7 +59,7 @@ public class SearchGameManager : MonoBehaviour
     {
         if (autoStartOnPlay)
         {
-            StartNewRound();
+            StartCoroutine(StartSearchSequence());
         }
         else
         {
@@ -75,7 +79,7 @@ public class SearchGameManager : MonoBehaviour
     {
         if (debugInput != null && debugInput.WasResetPressedThisFrame())
         {
-            StartNewRound();
+            StartCoroutine(StartSearchSequence());
         }
 
         if (!IsRoundActive)
@@ -101,7 +105,40 @@ public class SearchGameManager : MonoBehaviour
         }
     }
 
+    private bool isStartingSequence = false;
+
     public void StartNewRound()
+    {
+        if (isStartingSequence)
+        {
+            return;
+        }
+
+        StartCoroutine(StartSearchSequence());
+    }
+
+    private IEnumerator StartSearchSequence()
+    {
+        isStartingSequence = true;
+
+        Debug.Log("[FLOW] Search sequence started");
+
+        if (introAnimation != null)
+        {
+            Debug.Log("[FLOW] Playing intro animation");
+            yield return introAnimation.PlayIntro();
+        }
+        else
+        {
+            Debug.LogWarning("[FLOW] Keine Intro Animation im SearchGameManager zugewiesen.");
+        }
+
+        StartActualSearchRound();
+
+        isStartingSequence = false;
+    }
+
+    public void StartActualSearchRound()
     {
         IsRoundActive = true;
         currentState = SearchGameState.Searching;
