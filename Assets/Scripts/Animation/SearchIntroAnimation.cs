@@ -51,23 +51,7 @@ public class SearchIntroAnimation : MonoBehaviour
         spoonStartRot = spoon.rotation;
 
         spoon.gameObject.SetActive(true);
-        target.gameObject.SetActive(true);
 
-        for (int i = 0; i < hitCount; i++)
-        {
-            yield return MoveToTarget();
-
-            if (audioSource != null && hitSound != null)
-            {
-                audioSource.PlayOneShot(hitSound);
-            }
-
-            yield return MoveBack();
-            yield return new WaitForSeconds(0.08f);
-        }
-
-        spoon.gameObject.SetActive(false);
-        target.gameObject.SetActive(false);
     }
 
     private void PlaceObjectsInFrontOfCamera()

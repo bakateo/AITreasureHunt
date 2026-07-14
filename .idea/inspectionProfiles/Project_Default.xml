@@ -1,0 +1,90 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="argon2-cffi" />
+          <option value="argon2-cffi-bindings" />
+          <option value="asttokens" />
+          <option value="attrs" />
+          <option value="backcall" />
+          <option value="beautifulsoup4" />
+          <option value="bleach" />
+          <option value="cffi" />
+          <option value="colorama" />
+          <option value="cycler" />
+          <option value="debugpy" />
+          <option value="decorator" />
+          <option value="defusedxml" />
+          <option value="entrypoints" />
+          <option value="executing" />
+          <option value="fastjsonschema" />
+          <option value="fonttools" />
+          <option value="glfw" />
+          <option value="ipykernel" />
+          <option value="ipython" />
+          <option value="ipython-genutils" />
+          <option value="ipywidgets" />
+          <option value="jedi" />
+          <option value="Jinja2" />
+          <option value="jsonschema" />
+          <option value="jupyter" />
+          <option value="jupyter-client" />
+          <option value="jupyter-console" />
+          <option value="jupyter-core" />
+          <option value="jupyterlab-pygments" />
+          <option value="jupyterlab-widgets" />
+          <option value="kiwisolver" />
+          <option value="MarkupSafe" />
+          <option value="matplotlib" />
+          <option value="matplotlib-inline" />
+          <option value="mistune" />
+          <option value="nbclient" />
+          <option value="nbconvert" />
+          <option value="nbformat" />
+          <option value="nest-asyncio" />
+          <option value="notebook" />
+          <option value="packaging" />
+          <option value="pandocfilters" />
+          <option value="parso" />
+          <option value="pickleshare" />
+          <option value="Pillow" />
+          <option value="prometheus-client" />
+          <option value="prompt-toolkit" />
+          <option value="psutil" />
+          <option value="pure-eval" />
+          <option value="pycparser" />
+          <option value="Pygments" />
+          <option value="PyOpenGL" />
+          <option value="pyparsing" />
+          <option value="pyrsistent" />
+          <option value="python-dateutil" />
+          <option value="pywin32" />
+          <option value="pywinpty" />
+          <option value="pyzmq" />
+          <option value="qtconsole" />
+          <option value="QtPy" />
+          <option value="Send2Trash" />
+          <option value="six" />
+          <option value="soupsieve" />
+          <option value="stack-data" />
+          <option value="terminado" />
+          <option value="tinycss2" />
+          <option value="tornado" />
+          <option value="traitlets" />
+          <option value="wcwidth" />
+          <option value="webencodings" />
+          <option value="widgetsnbextension" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyStubPackagesAdvertiser" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="scipy" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
