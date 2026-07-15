@@ -20,6 +20,9 @@ public class LookAroundManager : MonoBehaviour
     [Header("Debug UI")]
     public bool showDebugOverlay = false;
 
+    [Header("Intro Ring Tour")]
+    public RingTourAnimation ringTourAnimation;
+
     [Header("Hold To Complete")]
     public float requiredLookTime = 2f;
 
@@ -127,6 +130,7 @@ public class LookAroundManager : MonoBehaviour
         {
             forward = Vector3.forward;
         }
+        
 
         initialForward = forward.normalized;
 
@@ -147,6 +151,11 @@ public class LookAroundManager : MonoBehaviour
         hasStartedSearchGame = false;
         completeTime = -1f;
         phaseStartTime = Time.time;
+
+        if (ringTourAnimation != null)
+        {
+            ringTourAnimation.ShowAtDirectionDelayed(CurrentRequiredDirection);
+        }
 
         Debug.Log("Umschau-Phase gestartet: Folge den leuchtenden Kreisen.");
     }
@@ -195,12 +204,29 @@ public class LookAroundManager : MonoBehaviour
 
         if (currentLookTime >= requiredLookTime)
         {
-            CompleteDirection(CurrentRequiredDirection);
+            LookAroundDirection completedDirection = CurrentRequiredDirection;
+
+            CompleteDirection(completedDirection);
 
             currentLookTime = 0f;
             currentLookProgress = 0f;
 
             UpdateNextRequiredDirection();
+
+            if (completedTargetCount < 4)
+            {
+                if (ringTourAnimation != null)
+                {
+                    ringTourAnimation.MoveToDirection(CurrentRequiredDirection);
+                }
+            }
+            else
+            {
+                if (ringTourAnimation != null)
+                {
+                    ringTourAnimation.HideObject();
+                }
+            }
         }
     }
 
