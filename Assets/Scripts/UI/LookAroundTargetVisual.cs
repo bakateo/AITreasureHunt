@@ -14,6 +14,9 @@ public class LookAroundTargetVisual : MonoBehaviour
     public Material activeMaterial;
     public Material completedMaterial;
 
+    [Header("Progress Ring")]
+    public ProceduralProgressRingMesh progressRing;
+
     [Header("Scale Animation")]
     public float inactiveScale = 0.16f;
     public float activeScale = 0.23f;
@@ -79,21 +82,63 @@ public class LookAroundTargetVisual : MonoBehaviour
         UpdateScaleAnimation();
         UpdateFadeOut();
         UpdateAudio();
+        UpdateCompletedHideTimer();
     }
 
-    public void SetState(bool activeTarget, bool completed)
+    private void UpdateCompletedHideTimer()
+    {
+        if (!isCompleted)
+        {
+            return;
+        }
+
+        if (completedTime < 0f)
+        {
+            return;
+        }
+
+    if (Time.time >= completedTime + completedVisibleTime)
+    {
+        readyToHide = true;
+    }
+}
+
+    public void SetState(bool activeTarget, bool completed, float progress)
     {
         isActiveTarget = activeTarget;
         isCompleted = completed;
 
+        progress = Mathf.Clamp01(progress);
+
         if (completed && !wasCompletedLastFrame)
         {
             completedTime = Time.time;
-            readyToHide = false;
+            readyToHide = true;
+
+            if (progressRing != null)
+            {
+                progressRing.SetProgress(1f);
+            }
+
             ApplyMaterial(completedMaterial);
         }
         else if (!completed)
         {
+            readyToHide = false;
+            completedTime = -1f;
+
+            if (progressRing != null)
+            {
+                if (activeTarget)
+                {
+                    progressRing.SetProgress(progress);
+                }
+                else
+                {
+                    progressRing.SetProgress(0f);
+                }
+            }
+
             if (activeTarget)
             {
                 ApplyMaterial(activeMaterial);
@@ -105,6 +150,32 @@ public class LookAroundTargetVisual : MonoBehaviour
         }
 
         wasCompletedLastFrame = completed;
+    }
+
+    private void ApplyProgressColor(float progress)
+    {
+        if (targetRenderer == null)
+        {
+            return;
+        }
+
+        Material material = targetRenderer.material;
+
+        Color startColor = activeMaterial != null
+            ? activeMaterial.color
+            : Color.white;
+
+        Color progressColor = completedMaterial != null
+            ? completedMaterial.color
+            : Color.green;
+
+        Color color = Color.Lerp(
+            startColor,
+            progressColor,
+            progress
+        );
+
+        material.color = color;
     }
 
     public bool IsReadyToHide()
