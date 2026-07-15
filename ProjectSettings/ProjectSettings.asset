@@ -716,7 +716,7 @@ PlayerSettings:
       SpatialPerception: True
       InternetClient: True
       WebCam: True
-      Microphone: True
+      Microphone: False
   metroTargetDeviceFamilies: {}
   metroFTAName: 
   metroFTAFileTypes: []

@@ -82,6 +82,8 @@ public class LookAroundVisualController : MonoBehaviour
 
     private void UpdateTargetStates()
     {
+        LookAroundDirection currentTarget = lookAroundManager.CurrentRequiredDirection;
+
         foreach (LookAroundTargetVisual target in targets)
         {
             if (target == null)
@@ -92,15 +94,11 @@ public class LookAroundVisualController : MonoBehaviour
             bool completed = lookAroundManager.IsDirectionCompleted(target.direction);
             bool active = lookAroundManager.IsActive &&
                         !completed &&
-                        target.direction == lookAroundManager.CurrentRequiredDirection;
+                        target.direction == currentTarget;
 
-            if (!lookAroundManager.IsActive && !lookAroundManager.IsComplete)
-            {
-                target.gameObject.SetActive(false);
-                continue;
-            }
+            bool shouldExistDuringPhase = lookAroundManager.IsActive || lookAroundManager.IsComplete;
 
-            if (completed && target.IsReadyToHide())
+            if (!shouldExistDuringPhase)
             {
                 target.gameObject.SetActive(false);
                 continue;
@@ -111,7 +109,15 @@ public class LookAroundVisualController : MonoBehaviour
                 target.gameObject.SetActive(true);
             }
 
-            target.SetState(active, completed);
+            float progress = active ? lookAroundManager.CurrentLookProgress : 0f;
+
+            target.SetState(active, completed, progress);
+
+            if (completed && target.IsReadyToHide())
+            {
+                target.gameObject.SetActive(false);
+                continue;
+            }
         }
     }
 

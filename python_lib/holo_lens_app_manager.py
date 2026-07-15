@@ -1,11 +1,11 @@
 import time
 
-from python_lib.ai_player import AiPlayer
-from python_lib.audio_speech_detector import AudioSpeechDetector
-from python_lib.audio_stream_receiver import AudioStreamReceiver
-from python_lib.object_stream_receiver import ObjectStreamReceiver
-from python_lib.person import Person
-from python_lib.response_sender import ResponseSender
+from ai_player import AiPlayer
+from audio_speech_detector import AudioSpeechDetector
+from audio_stream_receiver import AudioStreamReceiver
+from object_stream_receiver import ObjectStreamReceiver
+from person import Person
+from response_sender import ResponseSender
 
 
 class HoloLensAppManager:
@@ -34,14 +34,17 @@ class HoloLensAppManager:
                 pcm_data = self.audio_receiver.get_next_pcm_chunk()
                 if pcm_data:
                     path = self.speech_detector.process_audio(pcm_data)
-                    current_game_state = self.object_receiver.current_data
+                    if path is not None:
+                        current_game_state = self.object_receiver.current_data
 
-                    self.ai_player.add_message(is_system_prompt=True, text=current_game_state)
-                    self.ai_player.add_message(audio_path=path)
+                        #self.ai_player.add_message(is_system_prompt=True, text=current_game_state)
+                        self.ai_player.add_message(audio_path=path)
 
-                    answer, audio = self.ai_player.send()
+                        print(path)
 
-                    self.object_receiver.send_data(answer)
+                        answer, audio = self.ai_player.send()
+
+                        self.object_receiver.send_data(answer)
 
                 time.sleep(0.001)
 

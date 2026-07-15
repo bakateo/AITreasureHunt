@@ -1,7 +1,7 @@
 import json
 import threading
 
-from python_lib import UdpComms as U
+import UdpComms as U
 
 
 class ObjectStreamReceiver:

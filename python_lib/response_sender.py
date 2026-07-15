@@ -4,7 +4,7 @@ import time
 
 
 class ResponseSender:
-    def __init__(self, hololens_ip, target_port=50001):
+    def __init__(self, hololens_ip, target_port=2222):
         self.hololens_ip = hololens_ip
         self.port = target_port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

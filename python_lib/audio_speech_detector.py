@@ -92,4 +92,4 @@ class AudioSpeechDetector:
             wf.writeframes(b"".join(self.voiced_frames))
         print(f"[VAD] Audio gespeichert: {filename}")
 
-        return timestamp
+        return filename
