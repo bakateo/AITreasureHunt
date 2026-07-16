@@ -300,7 +300,7 @@
       "url": "https://packages.unity.com"
     },
     "org.mixedrealitytoolkit.audio": {
-      "version": "file:C:/Users/Matteo/Downloads/org.mixedrealitytoolkit.audio-3.0.5.tgz",
+      "version": "file:MRTK3/org.mixedrealitytoolkit.audio-3.0.5.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {
