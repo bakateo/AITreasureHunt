@@ -9,4 +9,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n[Test] Abbruch durch Benutzer (STRG+C).")
     finally:
-        server.stop
+        server.stop()

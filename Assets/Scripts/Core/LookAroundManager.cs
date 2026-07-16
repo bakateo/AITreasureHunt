@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 
 public class LookAroundManager : MonoBehaviour
 {
@@ -18,6 +19,20 @@ public class LookAroundManager : MonoBehaviour
 
     [Header("Debug UI")]
     public bool showDebugOverlay = false;
+
+    [Header("Intro Ring Tour")]
+    public RingTourAnimation ringTourAnimation;
+
+    [Header("Hold To Complete")]
+    public float requiredLookTime = 2f;
+
+    public float CurrentLookProgress
+    {
+        get { return currentLookProgress; }
+    }
+
+    private float currentLookTime = 0f;
+    private float currentLookProgress = 0f;
 
     public bool HasLookedForward { get; private set; }
     public bool HasLookedLeft { get; private set; }
@@ -115,8 +130,12 @@ public class LookAroundManager : MonoBehaviour
         {
             forward = Vector3.forward;
         }
+        
 
         initialForward = forward.normalized;
+
+        currentLookTime = 0f;
+        currentLookProgress = 0f;
 
         HasLookedForward = false;
         HasLookedLeft = false;
@@ -133,12 +152,20 @@ public class LookAroundManager : MonoBehaviour
         completeTime = -1f;
         phaseStartTime = Time.time;
 
+        if (ringTourAnimation != null)
+        {
+            ringTourAnimation.ShowAtDirectionDelayed(CurrentRequiredDirection);
+        }
+
         Debug.Log("Umschau-Phase gestartet: Folge den leuchtenden Kreisen.");
     }
 
     private void UpdateLookProgress()
     {
-        Vector3 currentForward = Vector3.ProjectOnPlane(playerTracking.Forward, Vector3.up);
+        Vector3 currentForward = Vector3.ProjectOnPlane(
+            playerTracking.Forward,
+            Vector3.up
+        );
 
         if (currentForward.sqrMagnitude < 0.001f)
         {
@@ -153,28 +180,54 @@ public class LookAroundManager : MonoBehaviour
             Vector3.up
         );
 
-        // Reihenfolge egal: Nutzer kann vorne, links, rechts oder hinten starten.
-        if (!HasLookedForward && IsAngleForDirection(angleFromStart, LookAroundDirection.Front))
+        bool isLookingAtRequiredDirection = IsAngleForDirection(
+            angleFromStart,
+            CurrentRequiredDirection
+        );
+
+        if (isLookingAtRequiredDirection)
         {
-            CompleteDirection(LookAroundDirection.Front);
+            currentLookTime += Time.deltaTime;
+        }
+        else
+        {
+            currentLookTime -= Time.deltaTime * 2.0f;
         }
 
-        if (!HasLookedLeft && IsAngleForDirection(angleFromStart, LookAroundDirection.Left))
-        {
-            CompleteDirection(LookAroundDirection.Left);
-        }
+        currentLookTime = Mathf.Clamp(
+            currentLookTime,
+            0f,
+            requiredLookTime
+        );
 
-        if (!HasLookedRight && IsAngleForDirection(angleFromStart, LookAroundDirection.Right))
-        {
-            CompleteDirection(LookAroundDirection.Right);
-        }
+        currentLookProgress = currentLookTime / requiredLookTime;
 
-        if (!HasLookedBack && IsAngleForDirection(angleFromStart, LookAroundDirection.Back))
+        if (currentLookTime >= requiredLookTime)
         {
-            CompleteDirection(LookAroundDirection.Back);
-        }
+            LookAroundDirection completedDirection = CurrentRequiredDirection;
 
-        UpdateNextRequiredDirection();
+            CompleteDirection(completedDirection);
+
+            currentLookTime = 0f;
+            currentLookProgress = 0f;
+
+            UpdateNextRequiredDirection();
+
+            if (completedTargetCount < 4)
+            {
+                if (ringTourAnimation != null)
+                {
+                    ringTourAnimation.MoveToDirection(CurrentRequiredDirection);
+                }
+            }
+            else
+            {
+                if (ringTourAnimation != null)
+                {
+                    ringTourAnimation.HideObject();
+                }
+            }
+        }
     }
 
     private void CompleteDirection(LookAroundDirection direction)

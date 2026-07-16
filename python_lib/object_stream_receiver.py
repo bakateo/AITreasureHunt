@@ -33,6 +33,6 @@ class ObjectStreamReceiver:
         if self._thread:
             self._thread.join()
 
-    def send_data(self, text):
-        reply = {"answer": text}
+    def send_data(self, text, message_type='answer'):
+        reply = {message_type: text}
         self.socket.SendData(json.dumps(reply))
