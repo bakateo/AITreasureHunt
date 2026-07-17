@@ -13,7 +13,7 @@ class ObjectStreamReceiver:
         }
         self._is_running = False
         self._thread = None
-        self.socket = U.UdpComms(udpIP="127.0.0.1", portTX=8000, portRX=8001, enableRX=True, suppressWarnings=True)
+        self.socket = U.UdpComms(udpIP="192.168.178.107", portTX=5001, portRX=5000, enableRX=True, suppressWarnings=True)
 
     def start(self):
         self._is_running = True

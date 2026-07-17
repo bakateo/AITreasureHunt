@@ -17,6 +17,27 @@ public class TargetController : MonoBehaviour
 
     public bool IsVisible { get; private set; }
 
+    private UdpSocket udpSocket;
+
+    void Start()
+    {
+        udpSocket = FindObjectOfType<UdpSocket>();
+
+        if (udpSocket != null)
+            udpSocket.OnLocationReceived += MoveTarget;
+    }
+
+    private void MoveTarget(Vector3 position)
+    {
+        targetObject.transform.position = position;
+    }
+
+    private void OnDestroy()
+    {
+        if (udpSocket != null)
+            udpSocket.OnLocationReceived -= MoveTarget;
+    }
+
     public Vector3 TargetPosition
     {
         get

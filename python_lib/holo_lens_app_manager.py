@@ -10,7 +10,7 @@ from response_sender import ResponseSender
 
 
 class HoloLensAppManager:
-    def __init__(self, hololens_ip, username, password, object_port=50000, response_port=50001):
+    def __init__(self, hololens_ip, username, password, object_port=5000, response_port=5001):
         self.hololens_ip = hololens_ip
         self.is_running = False
 

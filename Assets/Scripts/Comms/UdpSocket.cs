@@ -1,17 +1,3 @@
-/*
-Created by Youssef Elashry to allow two-way communication between Python3 and Unity to send and receive strings
-
-Feel free to use this in your individual or commercial projects BUT make sure to reference me as: Two-way communication between Python 3 and Unity (C#) - Y. T. Elashry
-It would be appreciated if you send me how you have used this in your projects (e.g. Machine Learning) at youssef.elashry@gmail.com
-
-Use at your own risk
-Use under the Apache License 2.0
-
-Modified by: 
-Youssef Elashry 12/2020 (replaced obsolete functions and improved further - works with Python as well)
-Based on older work by Sandra Fang 2016 - Unity3D to MATLAB UDP communication - [url]http://msdn.microsoft.com/de-de/library/bb979228.aspx#ID0E3BAC[/url]
-*/
-
 using UnityEngine;
 using System.Collections;
 using System;
@@ -26,8 +12,8 @@ public class UdpSocket : MonoBehaviour
     [HideInInspector] public bool isTxStarted = false;
 
     [SerializeField] string IP = "192.168.178.107"; // local host
-    [SerializeField] int rxPort = 8000; // port to receive data from Python on
-    [SerializeField] int txPort = 8001; // port to send data to Python on
+    [SerializeField] int rxPort = 5000; // port to receive data from Python on
+    [SerializeField] int txPort = 5001; // port to send data to Python on
 
     [Serializable]
     public class SpeechMessage
@@ -36,24 +22,59 @@ public class UdpSocket : MonoBehaviour
         public string text;
     }
 
+    [Serializable]
+    public class LocationData
+    {
+        public float distance;
+        public float angle;
+        public float horizontalAngle;
+        public string directionText;
+        public bool visible;
+        public string state;
+    }
+
+    [Serializable]
+    public class LocationMessage
+    {
+        public string type;
+        public LocationData location;
+    }
     public TextToSpeechManager textToSpeech;
+    public event System.Action<Vector3> OnLocationReceived;
 
     // Create necessary UdpClient objects
     UdpClient client;
     IPEndPoint remoteEndPoint;
     Thread receiveThread; // Receiving Thread
 
-    public void SendData(string message) // Use to send data to Python
+    public void SendTTS(string text)
     {
-        try
+        SpeechMessage msg = new SpeechMessage
         {
-            byte[] data = Encoding.UTF8.GetBytes(message);
-            client.Send(data, data.Length, remoteEndPoint);
-        }
-        catch (Exception err)
+            type = "tts",
+            text = text
+        };
+
+        SendJson(JsonUtility.ToJson(msg));
+    }
+
+    public void SendLocation(LocationData location)
+    {
+        LocationMessage msg = new LocationMessage
         {
-            print(err.ToString());
-        }
+            type = "location",
+            location = location
+        };
+
+        SendJson(JsonUtility.ToJson(msg));
+    }
+
+    private void SendJson(string json)
+    {
+        byte[] data = Encoding.UTF8.GetBytes(json);
+        client.Send(data, data.Length, remoteEndPoint);
+
+        Debug.Log("Sent: " + json);
     }
 
     void Awake()
@@ -102,70 +123,58 @@ public class UdpSocket : MonoBehaviour
 
     private void ProcessInput(string input)
     {
-        // PROCESS INPUT RECEIVED STRING HERE
-
-        if (!isTxStarted) // First data arrived so tx started
-        {
-            isTxStarted = true;
-        }
-
         try
         {
-            SpeechMessage message =
-                JsonUtility.FromJson<SpeechMessage>(input);
+            MessageType header = JsonUtility.FromJson<MessageType>(input);
 
-
-
-            if (message == null)
+            switch (header.type)
             {
-                Debug.LogWarning(
-                    "JSON parsing failed");
-                return;
-            }
+                case "tts":
+                    {
+                        SpeechMessage msg =
+                            JsonUtility.FromJson<SpeechMessage>(input);
 
+                        textToSpeech?.Speak(msg.text);
+                        break;
+                    }
 
+                case "location":
+                    {
+                        LocationMessage msg = JsonUtility.FromJson<LocationMessage>(input);
 
-            Debug.Log("Received type: "
-                + message.type
-            );
+                        float yaw = msg.location.angle * Mathf.Deg2Rad;
+                        float pitch = msg.location.horizontalAngle * Mathf.Deg2Rad;
 
+                        Vector3 direction = new Vector3(
+                            Mathf.Sin(yaw) * Mathf.Cos(pitch),
+                            Mathf.Sin(pitch),
+                            Mathf.Cos(yaw) * Mathf.Cos(pitch)
+                        );
 
-            Debug.Log(
-                "Received text: "
-                + message.text
-            );
+                        Vector3 worldPosition =
+                            Camera.main.transform.position +
+                            direction * msg.location.distance;
 
-            if (message.type == "tts")
-            {
+                        OnLocationReceived?.Invoke(worldPosition);
 
-                if (textToSpeech != null)
-                {
-                    textToSpeech.Speak(
-                        message.text
-                    );
-                }
+                        break;
+                    }
 
-                else
-                {
-                    Debug.LogWarning(
-                        "No TTS Manager found"
-                    );
-                }
-
+                default:
+                    Debug.LogWarning("Unknown message type");
+                    break;
             }
         }
         catch (Exception e)
         {
-            Debug.LogError(
-             "JSON Error: " + e.Message
-         );
+            Debug.LogError(e);
         }
+    }
 
-
-            if (textToSpeech != null)
-        {
-            textToSpeech.Speak(input);
-        }
+    [Serializable]
+    public class MessageType
+    {
+        public string type;
     }
 
     //Prevent crashes - close clients and threads properly!

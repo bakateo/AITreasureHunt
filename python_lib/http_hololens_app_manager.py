@@ -158,7 +158,7 @@ class HttpHoloLensAppManager:
 if __name__ == "__main__":
     manager = HttpHoloLensAppManager(
         host="0.0.0.0",
-        port=5000
+        port=8000
     )
 
     manager.start()

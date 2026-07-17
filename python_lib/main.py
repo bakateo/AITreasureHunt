@@ -1,7 +1,7 @@
 from holo_lens_app_manager import HoloLensAppManager
 
 if __name__ == "__main__":
-    server = HoloLensAppManager(hololens_ip="192.168.178.145")
+    server = HoloLensAppManager(hololens_ip="192.168.178.145", username="HoloHAII", password="HAIISoSe26")
 
     try:
         server.start()
